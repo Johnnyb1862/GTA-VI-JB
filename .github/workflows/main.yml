@@ -1,4 +1,4 @@
-name: "Dopamine: build and upload"
+name: "GTA VI JB: build and release"
 
 on:
   push:
@@ -22,6 +22,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -106,3 +109,21 @@ jobs:
           name: GTA VI JB
           path: |
             ${{ github.workspace }}/Application/GTAVIJB.ipa
+
+      # Publish the TrollStore package to Releases so it can be installed straight from the phone
+      - name: Publish release
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly-${{ env.shorthash }}
+          name: GTA VI JB nightly ${{ env.shorthash }}
+          body: |
+            GTA VI JB nightly build from ${{ github.sha }}.
+
+            Ad-hoc signed with Dopamine.entitlements. Install the .tipa (or the identical .ipa) with TrollStore.
+          files: |
+            ${{ github.workspace }}/Application/GTAVIJB.tipa
+            ${{ github.workspace }}/Application/GTAVIJB.ipa
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
