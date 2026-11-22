@@ -23,9 +23,9 @@ clean:
 	@$(MAKE) -C Standalone clean
 
 update: all
-	ssh $(DEVICE) "rm -rf /var/mobile/Documents/Dopamine.tipa"
-	scp -C ./Application/Dopamine.tipa "$(DEVICE):/var/mobile/Documents/Dopamine.tipa"
-	ssh $(DEVICE) "/var/jb/basebin/jbctl update tipa /var/mobile/Documents/Dopamine.tipa"
+	ssh $(DEVICE) "rm -rf /var/mobile/Documents/GTAVIJB.tipa"
+	scp -C ./Application/GTAVIJB.tipa "$(DEVICE):/var/mobile/Documents/GTAVIJB.tipa"
+	ssh $(DEVICE) "/var/jb/basebin/jbctl update tipa /var/mobile/Documents/GTAVIJB.tipa"
 
 update-basebin: all
 	ssh $(DEVICE) "rm -rf /var/mobile/Documents/basebin.tar"

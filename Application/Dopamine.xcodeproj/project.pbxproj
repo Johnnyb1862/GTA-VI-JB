@@ -3089,8 +3089,9 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "GTA VI JB";
 				INFOPLIST_FILE = Dopamine/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Dopamine needs to access your photo library to support picking a boot logo";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "GTA VI JB needs to access your photo library to support picking a custom boot logo";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -3127,8 +3128,9 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "GTA VI JB";
 				INFOPLIST_FILE = Dopamine/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Dopamine needs to access your photo library to support picking a boot logo";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "GTA VI JB needs to access your photo library to support picking a custom boot logo";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

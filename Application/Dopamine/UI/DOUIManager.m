@@ -37,9 +37,9 @@
 
 - (BOOL)isUpdateAvailable
 {
-    NSString *latestVersion = [self getLatestReleaseTag];
-    NSString *currentVersion = [self getLaunchedReleaseTag];
-    return [latestVersion numericalVersionRepresentation] > [currentVersion numericalVersionRepresentation];
+    // GTA VI JB is not published on Dopamine's release feed; offering that update would
+    // replace this build with stock Dopamine.
+    return NO;
 }
 
 - (NSArray *)getUpdatesInRange:(NSString *)start end:(NSString *)end

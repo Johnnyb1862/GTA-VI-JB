@@ -4,6 +4,22 @@
 <array>
 	<dict>
 		<key>key</key>
+		<string>gtavi</string>
+		<key>name</key>
+		<string>Vice City Sunset</string>
+		<key>image</key>
+		<string>Background_GTAVI</string>
+		<key>actionMenuColor</key>
+		<string>B83A0A3F</string>
+		<key>windowColor</key>
+		<string>FF0B0410</string>
+		<key>blur</key>
+		<integer>0</integer>
+		<key>titleShadow</key>
+		<true/>
+	</dict>
+	<dict>
+		<key>key</key>
 		<string>default</string>
 		<key>name</key>
 		<string>Dopamine</string>

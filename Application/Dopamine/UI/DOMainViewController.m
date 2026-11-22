@@ -11,6 +11,7 @@
 #import "DOJailbreaker.h"
 #import "DOGlobalAppearance.h"
 #import "DOActionMenuButton.h"
+#import "DOTheme.h"
 #import "DOUpdateViewController.h"
 #import "DOLogCrashViewController.h"
 #import <pthread.h>
@@ -74,7 +75,7 @@
     }
 
     //Header
-    DOHeaderView *headerView = [[DOHeaderView alloc] initWithImage: [UIImage imageNamed:@"Dopamine"] subtitles: @[
+    DOHeaderView *headerView = [[DOHeaderView alloc] initWithImage: [DOTheme brandWordmarkImage] subtitles: @[
         [DOGlobalAppearance mainSubtitleString:[[DOEnvironmentManager sharedManager] versionSupportString]],
         [DOGlobalAppearance secondarySubtitleString:DOLocalizedString(@"Credits_Made_By")],
     ]];

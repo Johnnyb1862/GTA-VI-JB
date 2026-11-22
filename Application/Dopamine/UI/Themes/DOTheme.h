@@ -25,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (UIImage *)generateBootLogo;
 
+// GTA VI JB wordmark, used for the header on the main screen
++ (UIImage *)brandWordmarkImage;
+
 @end
 
 

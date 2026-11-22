@@ -7,6 +7,18 @@
 
 #import "DOTheme.h"
 #import "UIImage+Blur.h"
+#import <math.h>
+
+// GTA VI JB palette (Vice City sunset)
+#define DO_COLOR_INK      [UIColor colorWithRed:0.043 green:0.024 blue:0.071 alpha:1.0]
+#define DO_COLOR_PURPLE   [UIColor colorWithRed:0.231 green:0.039 blue:0.271 alpha:1.0]
+#define DO_COLOR_MAGENTA  [UIColor colorWithRed:0.557 green:0.106 blue:0.357 alpha:1.0]
+#define DO_COLOR_PINK     [UIColor colorWithRed:1.000 green:0.176 blue:0.541 alpha:1.0]
+#define DO_COLOR_ORANGE   [UIColor colorWithRed:1.000 green:0.478 blue:0.145 alpha:1.0]
+#define DO_COLOR_GOLD     [UIColor colorWithRed:1.000 green:0.749 blue:0.353 alpha:1.0]
+
+// Canvas the generated theme artwork (and therefore the boot logo) is drawn on
+#define DO_ARTWORK_SIZE CGSizeMake(1290, 2796)
 
 @interface DOTheme ()
 @property (nonatomic, retain) NSString *imageName;
@@ -40,33 +52,342 @@
 
 - (UIImage *)image
 {
-    if (_image == nil)
-        _image = [[UIImage imageNamed:self.imageName] imageWithBlur:self.blur];
+    if (_image == nil) {
+        UIImage *image = self.imageName ? [UIImage imageNamed:self.imageName] : nil;
+
+        // Themes without a bundled backdrop (GTA VI JB) get their artwork drawn at runtime
+        if (!image) image = [self generatedBackgroundImage];
+
+        if (self.blur > 0) image = [image imageWithBlur:self.blur];
+
+        _image = image;
+    }
     return _image;
 }
+
+#pragma mark - Generated artwork
+
+- (UIImage *)generatedBackgroundImage
+{
+    CGSize size = DO_ARTWORK_SIZE;
+
+    UIGraphicsBeginImageContextWithOptions(size, YES, 1.0);
+    CGContextRef ctx = UIGraphicsGetCurrentContext();
+
+    [self drawSunsetInContext:ctx size:size];
+
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    return image;
+}
+
+- (void)drawSunsetInContext:(CGContextRef)ctx size:(CGSize)size
+{
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+
+    // Dusk sky
+    NSArray *skyColors = @[
+        (id)[UIColor colorWithRed:0.055 green:0.027 blue:0.106 alpha:1.0].CGColor,
+        (id)DO_COLOR_PURPLE.CGColor,
+        (id)DO_COLOR_MAGENTA.CGColor,
+        (id)[UIColor colorWithRed:0.878 green:0.271 blue:0.353 alpha:1.0].CGColor,
+        (id)DO_COLOR_ORANGE.CGColor,
+        (id)DO_COLOR_GOLD.CGColor,
+    ];
+    CGFloat skyLocations[] = {0.0, 0.20, 0.44, 0.63, 0.78, 0.88};
+
+    CGGradientRef sky = CGGradientCreateWithColors(colorSpace, (__bridge CFArrayRef)skyColors, skyLocations);
+    CGContextDrawLinearGradient(ctx, sky,
+                                CGPointMake(0, 0),
+                                CGPointMake(0, size.height),
+                                kCGGradientDrawsBeforeStartLocation | kCGGradientDrawsAfterEndLocation);
+    CGGradientRelease(sky);
+
+    // Sun glow
+    CGPoint sunCenter = CGPointMake(size.width * 0.5, size.height * 0.63);
+    CGFloat sunRadius = size.width * 0.62;
+
+    NSArray *glowColors = @[
+        (id)[UIColor colorWithRed:1.0 green:0.898 blue:0.686 alpha:0.55].CGColor,
+        (id)[UIColor colorWithRed:1.0 green:0.478 blue:0.145 alpha:0.22].CGColor,
+        (id)DO_COLOR_PINK.CGColor,
+    ];
+    CGFloat glowLocations[] = {0.0, 0.42, 1.0};
+
+    CGGradientRef glow = CGGradientCreateWithColors(colorSpace, (__bridge CFArrayRef)glowColors, glowLocations);
+    CGContextDrawRadialGradient(ctx, glow, sunCenter, 0, sunCenter, sunRadius, 0);
+    CGGradientRelease(glow);
+
+    CGColorSpaceRelease(colorSpace);
+
+    // Sun disc
+    CGFloat discRadius = size.width * 0.15;
+    [DO_COLOR_GOLD setFill];
+    [[UIBezierPath bezierPathWithOvalInRect:CGRectMake(sunCenter.x - discRadius,
+                                                       sunCenter.y - discRadius,
+                                                       discRadius * 2,
+                                                       discRadius * 2)] fill];
+
+    // Retro horizontal bands across the sun
+    [[UIColor colorWithRed:0.231 green:0.039 blue:0.271 alpha:0.45] setFill];
+    for (int i = 0; i < 5; i++) {
+        CGFloat bandHeight = discRadius * (0.06 + i * 0.03);
+        CGFloat bandY = sunCenter.y + discRadius * 0.10 + i * discRadius * 0.30;
+        [[UIBezierPath bezierPathWithRect:CGRectMake(sunCenter.x - discRadius,
+                                                     bandY,
+                                                     discRadius * 2,
+                                                     bandHeight)] fill];
+    }
+
+    // City skyline
+    CGFloat groundY = size.height * 0.90;
+    UIBezierPath *skyline = [UIBezierPath bezierPath];
+    [skyline moveToPoint:CGPointMake(0, size.height)];
+    [skyline addLineToPoint:CGPointMake(0, groundY)];
+    CGFloat cityX = 0;
+    int building = 0;
+    while (cityX < size.width) {
+        CGFloat buildingWidth = size.width * (0.025 + ((building * 7) % 5) * 0.011);
+        CGFloat buildingHeight = size.height * (0.010 + ((building * 3) % 7) * 0.007);
+        [skyline addLineToPoint:CGPointMake(cityX, groundY - buildingHeight)];
+        [skyline addLineToPoint:CGPointMake(cityX + buildingWidth, groundY - buildingHeight)];
+        cityX += buildingWidth;
+        building++;
+    }
+    [skyline addLineToPoint:CGPointMake(size.width, size.height)];
+    [skyline closePath];
+    [DO_COLOR_INK setFill];
+    [skyline fill];
+
+    // Palms in the foreground
+    [self drawPalmInContext:ctx
+                       base:CGPointMake(size.width * 0.13, groundY + size.height * 0.03)
+                     height:size.height * 0.21
+                       lean:size.width * 0.035];
+    [self drawPalmInContext:ctx
+                       base:CGPointMake(size.width * 0.87, groundY + size.height * 0.04)
+                     height:size.height * 0.16
+                       lean:-size.width * 0.030];
+}
+
+- (void)drawPalmInContext:(CGContextRef)ctx base:(CGPoint)base height:(CGFloat)height lean:(CGFloat)lean
+{
+    [DO_COLOR_INK setStroke];
+
+    CGPoint top = CGPointMake(base.x + lean, base.y - height);
+
+    UIBezierPath *trunk = [UIBezierPath bezierPath];
+    [trunk moveToPoint:base];
+    [trunk addQuadCurveToPoint:top
+                 controlPoint:CGPointMake(base.x + lean * 0.15, base.y - height * 0.55)];
+    trunk.lineWidth = height * 0.035;
+    trunk.lineCapStyle = kCGLineCapRound;
+    [trunk stroke];
+
+    for (int i = 0; i < 7; i++) {
+        CGFloat angle = (-M_PI * 0.94) + (M_PI * 0.88) * ((CGFloat)i / 6.0);
+        CGFloat frondLength = height * (0.42 + ((i % 3) * 0.07));
+
+        UIBezierPath *frond = [UIBezierPath bezierPath];
+        [frond moveToPoint:top];
+        [frond addQuadCurveToPoint:CGPointMake(top.x + cos(angle) * frondLength,
+                                               top.y + sin(angle) * frondLength * 0.55)
+                     controlPoint:CGPointMake(top.x + cos(angle) * frondLength * 0.55,
+                                              top.y + sin(angle) * frondLength * 0.95)];
+        frond.lineWidth = height * 0.022;
+        frond.lineCapStyle = kCGLineCapRound;
+        [frond stroke];
+    }
+}
+
+#pragma mark - Boot logo (userspace reboot splash)
 
 - (UIImage *)generateBootLogo
 {
     UIImage *backgroundImage = [self image];
+    if (!backgroundImage) return nil;
+
     CGSize canvasSize = backgroundImage.size;
 
-    UIImage *overlayImage = [UIImage imageNamed:@"DopamineLogo"];
-
-    CGSize overlaySize = CGSizeMake(350, 350);
-    CGPoint overlayOrigin = CGPointMake((canvasSize.width - overlaySize.width) / 2.0,
-                                        (canvasSize.height - overlaySize.height) / 2.0);
-
-    UIGraphicsBeginImageContextWithOptions(canvasSize, NO, backgroundImage.scale);
+    UIGraphicsBeginImageContextWithOptions(canvasSize, YES, backgroundImage.scale);
 
     [backgroundImage drawInRect:CGRectMake(0, 0, canvasSize.width, canvasSize.height)];
 
-    // Render overlay (Dopamine Logo) in center of background for boot logo
-    [overlayImage drawInRect:CGRectMake(overlayOrigin.x, overlayOrigin.y, overlaySize.width, overlaySize.height)];
+    // Scrim so the lockup stays readable over a photographic backdrop
+    [[UIColor colorWithWhite:0.0 alpha:0.38] setFill];
+    [[UIBezierPath bezierPathWithRect:CGRectMake(0, 0, canvasSize.width, canvasSize.height)] fill];
+
+    [self drawVignetteInContext:UIGraphicsGetCurrentContext() size:canvasSize];
+    [self drawSplashLockupInContext:UIGraphicsGetCurrentContext() size:canvasSize];
 
     UIImage *finalImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
 
     return finalImage;
+}
+
+- (void)drawVignetteInContext:(CGContextRef)ctx size:(CGSize)size
+{
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+
+    NSArray *colors = @[
+        (id)[UIColor colorWithWhite:0.0 alpha:0.0].CGColor,
+        (id)[UIColor colorWithWhite:0.0 alpha:0.62].CGColor,
+    ];
+    CGFloat locations[] = {0.0, 1.0};
+
+    CGGradientRef gradient = CGGradientCreateWithColors(colorSpace, (__bridge CFArrayRef)colors, locations);
+    CGPoint center = CGPointMake(size.width / 2.0, size.height / 2.0);
+    CGContextDrawRadialGradient(ctx, gradient, center, 0, center,
+                                MAX(size.width, size.height) * 0.78,
+                                kCGGradientDrawsAfterEndLocation);
+
+    CGGradientRelease(gradient);
+    CGColorSpaceRelease(colorSpace);
+}
+
+- (void)drawSplashLockupInContext:(CGContextRef)ctx size:(CGSize)size
+{
+    CGFloat width = size.width;
+    CGFloat height = size.height;
+
+    NSMutableParagraphStyle *centered = [[NSMutableParagraphStyle alloc] init];
+    centered.alignment = NSTextAlignmentCenter;
+
+    NSShadow *romanShadow = [[NSShadow alloc] init];
+    romanShadow.shadowColor = [UIColor colorWithWhite:0.0 alpha:0.55];
+    romanShadow.shadowBlurRadius = width * 0.02;
+    romanShadow.shadowOffset = CGSizeMake(0, width * 0.006);
+
+    NSString *kicker = @"GRAND THEFT AUTO";
+    NSString *roman = @"VI";
+    NSString *title = @"GTA VI JB";
+    NSString *tagline = @"JAILBREAK";
+
+    NSDictionary *kickerAttributes = @{
+        NSFontAttributeName: [UIFont systemFontOfSize:width * 0.030 weight:UIFontWeightHeavy],
+        NSForegroundColorAttributeName: [UIColor colorWithWhite:1.0 alpha:0.88],
+        NSKernAttributeName: @(width * 0.0075),
+        NSParagraphStyleAttributeName: centered,
+    };
+    NSDictionary *romanAttributes = @{
+        NSFontAttributeName: [DOTheme italicFontOfSize:width * 0.300 weight:UIFontWeightBlack],
+        NSForegroundColorAttributeName: DO_COLOR_ORANGE,
+        NSStrokeColorAttributeName: [UIColor colorWithWhite:0.0 alpha:0.35],
+        NSStrokeWidthAttributeName: @(-2.5),
+        NSShadowAttributeName: romanShadow,
+        NSParagraphStyleAttributeName: centered,
+    };
+    NSDictionary *titleAttributes = @{
+        NSFontAttributeName: [DOTheme italicFontOfSize:width * 0.062 weight:UIFontWeightBlack],
+        NSForegroundColorAttributeName: [UIColor whiteColor],
+        NSKernAttributeName: @(width * 0.002),
+        NSParagraphStyleAttributeName: centered,
+    };
+    NSDictionary *taglineAttributes = @{
+        NSFontAttributeName: [UIFont systemFontOfSize:width * 0.024 weight:UIFontWeightSemibold],
+        NSForegroundColorAttributeName: DO_COLOR_PINK,
+        NSKernAttributeName: @(width * 0.012),
+        NSParagraphStyleAttributeName: centered,
+    };
+
+    CGSize kickerSize = [kicker sizeWithAttributes:kickerAttributes];
+    CGSize romanSize = [roman sizeWithAttributes:romanAttributes];
+    CGSize titleSize = [title sizeWithAttributes:titleAttributes];
+    CGSize taglineSize = [tagline sizeWithAttributes:taglineAttributes];
+
+    CGFloat ruleHeight = width * 0.0035;
+    CGFloat gapKicker = height * 0.012;
+    CGFloat gapRule = height * 0.018;
+
+    CGFloat totalHeight = kickerSize.height + gapKicker + romanSize.height + gapRule +
+                          ruleHeight + gapRule + titleSize.height + height * 0.010 +
+                          taglineSize.height;
+
+    CGFloat y = (height - totalHeight) / 2.0 - height * 0.02;
+
+    [kicker drawInRect:CGRectMake(0, y, width, kickerSize.height + 8) withAttributes:kickerAttributes];
+    y += kickerSize.height + gapKicker;
+
+    [roman drawInRect:CGRectMake(0, y, width, romanSize.height + 8) withAttributes:romanAttributes];
+    y += romanSize.height + gapRule;
+
+    CGFloat ruleWidth = width * 0.34;
+    [[UIColor colorWithRed:1.0 green:0.176 blue:0.541 alpha:0.25] setFill];
+    [[UIBezierPath bezierPathWithRect:CGRectMake((width - ruleWidth) / 2.0 - 6,
+                                                 y - 3,
+                                                 ruleWidth + 12,
+                                                 ruleHeight + 6)] fill];
+    [DO_COLOR_PINK setFill];
+    [[UIBezierPath bezierPathWithRect:CGRectMake((width - ruleWidth) / 2.0,
+                                                 y,
+                                                 ruleWidth,
+                                                 ruleHeight)] fill];
+    y += ruleHeight + gapRule;
+
+    [title drawInRect:CGRectMake(0, y, width, titleSize.height + 8) withAttributes:titleAttributes];
+    y += titleSize.height + height * 0.010;
+
+    [tagline drawInRect:CGRectMake(0, y, width, taglineSize.height + 8) withAttributes:taglineAttributes];
+}
+
+#pragma mark - Wordmark
+
++ (UIImage *)brandWordmarkImage
+{
+    CGSize size = CGSizeMake(240, 80);
+
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+
+    NSMutableParagraphStyle *left = [[NSMutableParagraphStyle alloc] init];
+    left.alignment = NSTextAlignmentLeft;
+
+    NSDictionary *gtaAttributes = @{
+        NSFontAttributeName: [DOTheme italicFontOfSize:50 weight:UIFontWeightBlack],
+        NSForegroundColorAttributeName: [UIColor whiteColor],
+        NSKernAttributeName: @(-1.5),
+        NSParagraphStyleAttributeName: left,
+    };
+    NSDictionary *viAttributes = @{
+        NSFontAttributeName: [DOTheme italicFontOfSize:58 weight:UIFontWeightBlack],
+        NSForegroundColorAttributeName: DO_COLOR_ORANGE,
+        NSStrokeColorAttributeName: [UIColor colorWithWhite:0.0 alpha:0.45],
+        NSStrokeWidthAttributeName: @(-2.0),
+        NSParagraphStyleAttributeName: left,
+    };
+
+    CGSize gtaSize = [@"GTA" sizeWithAttributes:gtaAttributes];
+    [@"GTA" drawInRect:CGRectMake(0, 14, gtaSize.width + 6, gtaSize.height + 8) withAttributes:gtaAttributes];
+
+    CGFloat viX = gtaSize.width - 2;
+    CGSize viSize = [@"VI" sizeWithAttributes:viAttributes];
+    [@"VI" drawInRect:CGRectMake(viX, 6, viSize.width + 6, viSize.height + 8) withAttributes:viAttributes];
+
+    UIFont *badgeFont = [UIFont systemFontOfSize:19 weight:UIFontWeightBlack];
+    NSDictionary *badgeAttributes = @{
+        NSFontAttributeName: badgeFont,
+        NSForegroundColorAttributeName: [UIColor whiteColor],
+    };
+    CGSize badgeTextSize = [@"JB" sizeWithAttributes:badgeAttributes];
+    CGRect badgeRect = CGRectMake(viX + viSize.width, 28, badgeTextSize.width + 12, badgeTextSize.height + 6);
+
+    [DO_COLOR_PINK setFill];
+    [[UIBezierPath bezierPathWithRoundedRect:badgeRect cornerRadius:6] fill];
+    [@"JB" drawAtPoint:CGPointMake(badgeRect.origin.x + 6, badgeRect.origin.y + 3) withAttributes:badgeAttributes];
+
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    return image;
+}
+
++ (UIFont *)italicFontOfSize:(CGFloat)size weight:(UIFontWeight)weight
+{
+    UIFont *baseFont = [UIFont systemFontOfSize:size weight:weight];
+    UIFontDescriptor *italicDescriptor = [baseFont.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitItalic];
+    UIFont *italicFont = italicDescriptor ? [UIFont fontWithDescriptor:italicDescriptor size:size] : nil;
+    return italicFont ?: baseFont;
 }
 
 @end

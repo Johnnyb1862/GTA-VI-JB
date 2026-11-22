@@ -1,30 +1,35 @@
 .PHONY: all clean build_clean
 
-all: Dopamine.ipa
+# Product name shown to the user / used for the packaged app
+APP_NAME = GTAVIJB
 
-Dopamine.ipa: build/Build/Products/Debug-iphoneos/Dopamine.app
-	@echo Ad-Hoc signing Dopamine
-	xattr -rc build/Build/Products/Debug-iphoneos/Dopamine.app
-	ldid -SDopamine/Dopamine.entitlements build/Build/Products/Debug-iphoneos/Dopamine.app/Dopamine
-	ldid -s build/Build/Products/Debug-iphoneos/Dopamine.app
-	rm -rf Payload Dopamine.ipa
+# The Xcode target keeps its original name, so do the on-disk .app and its executable
+BUILD_APP = build/Build/Products/Debug-iphoneos/Dopamine.app
+
+all: $(APP_NAME).ipa
+
+$(APP_NAME).ipa: $(BUILD_APP)
+	@echo Ad-Hoc signing $(APP_NAME)
+	xattr -rc $(BUILD_APP)
+	ldid -SDopamine/Dopamine.entitlements $(BUILD_APP)/Dopamine
+	ldid -s $(BUILD_APP)
+	rm -rf Payload $(APP_NAME).ipa $(APP_NAME).tipa
 	mkdir Payload
-	cp -r build/Build/Products/Debug-iphoneos/Dopamine.app Payload/Dopamine.app
-	zip -Ar Dopamine.ipa Payload
+	cp -r $(BUILD_APP) Payload/Dopamine.app
+	zip -Ar $(APP_NAME).ipa Payload
 	rm -rf Payload
-	rm -rf Dopamine.tipa
-	cp Dopamine.ipa Dopamine.tipa
+	cp $(APP_NAME).ipa $(APP_NAME).tipa
 
 ifeq ($(NIGHTLY), 1)
-build/Build/Products/Debug-iphoneos/Dopamine.app: FORCE
+$(BUILD_APP): FORCE
 	xcodebuild -scheme Dopamine -derivedDataPath build -destination 'generic/platform=iOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO GCC_PREPROCESSOR_DEFINITIONS='NIGHTLY=1 COMMIT_HASH=\"$(COMMIT_HASH)\"'
 else
-build/Build/Products/Debug-iphoneos/Dopamine.app: FORCE
+$(BUILD_APP): FORCE
 	xcodebuild -scheme Dopamine -derivedDataPath build -destination 'generic/platform=iOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 endif
 
 clean:
-	rm -rf build Payload Dopamine.ipa Dopamine.tipa
+	rm -rf build Payload $(APP_NAME).ipa $(APP_NAME).tipa
 
 build_clean:
 	rm -rf Payload build
