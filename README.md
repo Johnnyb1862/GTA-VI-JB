@@ -25,6 +25,7 @@ shipped upstream. This fork only changes the app name and the presentation.
 | Credits | The Source Code button opens this repository |
 | Jailbreak progress | The log view is replaced by a GTA-style chase: a police car running down pedestrians while the wanted stars fill. The sixth star lands when the jailbreak completes and WASTED holds for 3.5 seconds before the userspace reboot. Settings → Verbose Logs still shows the real log. |
 | Splash montage | Pedestrians and cars scattered through the empty sky around the palm, drawn from vector paths. Baked into the theme backdrop, so it shows on the main screen and the reboot splash. |
+| Launch audio | A looping synthwave vamp, synthesised into a WAV on first launch and played through an ambient session (obeys the ring/silent switch). Generated rather than shipped, so no third-party music is redistributed. |
 
 ## What is untouched, on purpose
 
