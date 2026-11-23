@@ -58,11 +58,29 @@
         // Themes without a bundled backdrop (GTA VI JB) get their artwork drawn at runtime
         if (!image) image = [self generatedBackgroundImage];
 
+        // Scatter pedestrians and cars over the empty sky of the GTA VI backdrop
+        if ([self.key isEqualToString:@"gtavi"]) image = [self imageByScatteringSilhouettesOnImage:image];
+
         if (self.blur > 0) image = [image imageWithBlur:self.blur];
 
         _image = image;
     }
     return _image;
+}
+
+- (UIImage *)imageByScatteringSilhouettesOnImage:(UIImage *)image
+{
+    CGSize size = image.size;
+    if (size.width <= 0 || size.height <= 0) return image;
+
+    UIGraphicsBeginImageContextWithOptions(size, YES, image.scale);
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    [self drawSkyMontageInContext:UIGraphicsGetCurrentContext() size:size];
+
+    UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    return result ?: image;
 }
 
 #pragma mark - Generated artwork
@@ -219,7 +237,6 @@
     [[UIBezierPath bezierPathWithRect:CGRectMake(0, 0, canvasSize.width, canvasSize.height)] fill];
 
     [self drawVignetteInContext:UIGraphicsGetCurrentContext() size:canvasSize];
-    [self drawSkyMontageInContext:UIGraphicsGetCurrentContext() size:canvasSize];
     [self drawSplashLockupInContext:UIGraphicsGetCurrentContext() size:canvasSize];
 
     UIImage *finalImage = UIGraphicsGetImageFromCurrentImageContext();
@@ -335,37 +352,55 @@
 
 #pragma mark - Sky montage
 
-// A distant street of cars and pedestrians, silhouetted in the open sky above the palm.
-// Everything here is drawn from vector paths, so no third-party artwork ships in the app.
+// Pedestrians and cars scattered through the empty sky around the palm tree, in the same
+// silhouette language as the palm itself. Everything is drawn from vector paths, so no
+// third-party artwork ships in the app. Placement is deterministic so the backdrop is stable.
 - (void)drawSkyMontageInContext:(CGContextRef)ctx size:(CGSize)size
 {
     CGFloat width = size.width;
     CGFloat height = size.height;
-    CGFloat horizon = height * 0.215;
-    CGFloat unit = height * 0.010;
 
-    UIColor *ink = [UIColor colorWithWhite:0.02 alpha:0.70];
+    UIColor *ink = [UIColor colorWithWhite:0.02 alpha:0.62];
     [ink setFill];
     [ink setStroke];
 
-    // The road they stand on
-    [[UIBezierPath bezierPathWithRect:CGRectMake(0, horizon, width, MAX(1.0, height * 0.0013))] fill];
+    uint32_t seed = 0x9E3779B9u;
+    NSInteger columns = 6;
+    NSInteger rows = 13;
+    CGFloat cellWidth = width / (CGFloat)columns;
+    CGFloat cellHeight = height / (CGFloat)rows;
 
-    CGFloat carPositions[] = {0.09, 0.36, 0.72};
-    for (int i = 0; i < 3; i++) {
-        [self drawSilhouetteCarInContext:ctx
-                                     atX:width * carPositions[i]
-                                 groundY:horizon
-                                   scale:unit * (i == 1 ? 1.05 : 0.82)];
-    }
+    for (NSInteger row = 0; row < rows; row++) {
+        for (NSInteger column = 0; column < columns; column++) {
+            seed = seed * 1664525u + 1013904223u;
+            CGFloat rPlacement = (CGFloat)((seed >> 8) & 0xFFFF) / (CGFloat)0xFFFF;
+            seed = seed * 1664525u + 1013904223u;
+            CGFloat rX = (CGFloat)((seed >> 8) & 0xFFFF) / (CGFloat)0xFFFF;
+            seed = seed * 1664525u + 1013904223u;
+            CGFloat rY = (CGFloat)((seed >> 8) & 0xFFFF) / (CGFloat)0xFFFF;
+            seed = seed * 1664525u + 1013904223u;
+            CGFloat rSize = (CGFloat)((seed >> 8) & 0xFFFF) / (CGFloat)0xFFFF;
 
-    CGFloat peoplePositions[] = {0.19, 0.24, 0.29, 0.50, 0.55, 0.62, 0.86, 0.91};
-    for (int i = 0; i < 8; i++) {
-        [self drawSilhouettePersonInContext:ctx
-                                        atX:width * peoplePositions[i]
-                                    groundY:horizon
-                                      scale:unit * (1.45 + ((i % 3) * 0.12))
-                                     stride:(CGFloat)i * 0.9];
+            if (rPlacement > 0.68) continue;
+
+            CGFloat x = (CGFloat)column * cellWidth + rX * cellWidth;
+            CGFloat y = (CGFloat)row * cellHeight + rY * cellHeight;
+
+            CGFloat fx = x / width;
+            CGFloat fy = y / height;
+
+            // Leave the palm tree itself and the title lockup readable
+            if (fx > 0.40 && fy > 0.24) continue;
+            if (fy > 0.34 && fy < 0.62) continue;
+
+            CGFloat unit = height * (0.0075 + rSize * 0.006);
+
+            if (rSize > 0.74) {
+                [self drawSilhouetteCarInContext:ctx atX:x groundY:y scale:unit * 1.15];
+            } else {
+                [self drawSilhouettePersonInContext:ctx atX:x groundY:y scale:unit * 1.5 stride:rX * 6.0];
+            }
+        }
     }
 }
 

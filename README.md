@@ -23,8 +23,8 @@ shipped upstream. This fork only changes the app name and the presentation.
 | Wallpaper | After every successful jailbreak the device wallpaper is set to the userspace reboot splash (best effort, see below) |
 | App icon | Generated at build time from the same palm photograph with a "GTA6JB" lockup (`scripts/generate_app_icons.swift`) |
 | Credits | The Source Code button opens this repository |
-| Jailbreak progress | The log view is replaced by a GTA-style chase: a police car running down pedestrians while the wanted stars fill. The sixth star lands when the jailbreak completes and WASTED appears. Settings → Verbose Logs still shows the real log. |
-| Splash montage | Silhouetted cars and pedestrians along a distant street in the open sky above the palm, drawn from vector paths |
+| Jailbreak progress | The log view is replaced by a GTA-style chase: a police car running down pedestrians while the wanted stars fill. The sixth star lands when the jailbreak completes and WASTED holds for 3.5 seconds before the userspace reboot. Settings → Verbose Logs still shows the real log. |
+| Splash montage | Pedestrians and cars scattered through the empty sky around the palm, drawn from vector paths. Baked into the theme backdrop, so it shows on the main screen and the reboot splash. |
 
 ## What is untouched, on purpose
 

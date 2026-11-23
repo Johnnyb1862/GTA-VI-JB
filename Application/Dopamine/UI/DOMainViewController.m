@@ -270,9 +270,13 @@
                 // No errors
                 [[DOEnvironmentManager sharedManager] applyJailbreakWallpaper];
                 [[DOUIManager sharedInstance] completeJailbreak];
-                [self fadeToBlack: ^{
-                    [jailbreaker finalize];
-                }];
+
+                // Hold on WASTED for a few seconds before the userspace reboot takes the screen
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    [self fadeToBlack: ^{
+                        [jailbreaker finalize];
+                    }];
+                });
             }
         });
         [self.jailbreakBtn unlockMutex];
