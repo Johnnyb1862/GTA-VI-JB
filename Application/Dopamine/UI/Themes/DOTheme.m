@@ -219,6 +219,7 @@
     [[UIBezierPath bezierPathWithRect:CGRectMake(0, 0, canvasSize.width, canvasSize.height)] fill];
 
     [self drawVignetteInContext:UIGraphicsGetCurrentContext() size:canvasSize];
+    [self drawSkyMontageInContext:UIGraphicsGetCurrentContext() size:canvasSize];
     [self drawSplashLockupInContext:UIGraphicsGetCurrentContext() size:canvasSize];
 
     UIImage *finalImage = UIGraphicsGetImageFromCurrentImageContext();
@@ -330,6 +331,106 @@
     y += titleSize.height + height * 0.010;
 
     [tagline drawInRect:CGRectMake(0, y, width, taglineSize.height + 8) withAttributes:taglineAttributes];
+}
+
+#pragma mark - Sky montage
+
+// A distant street of cars and pedestrians, silhouetted in the open sky above the palm.
+// Everything here is drawn from vector paths, so no third-party artwork ships in the app.
+- (void)drawSkyMontageInContext:(CGContextRef)ctx size:(CGSize)size
+{
+    CGFloat width = size.width;
+    CGFloat height = size.height;
+    CGFloat horizon = height * 0.215;
+    CGFloat unit = height * 0.010;
+
+    UIColor *ink = [UIColor colorWithWhite:0.02 alpha:0.70];
+    [ink setFill];
+    [ink setStroke];
+
+    // The road they stand on
+    [[UIBezierPath bezierPathWithRect:CGRectMake(0, horizon, width, MAX(1.0, height * 0.0013))] fill];
+
+    CGFloat carPositions[] = {0.09, 0.36, 0.72};
+    for (int i = 0; i < 3; i++) {
+        [self drawSilhouetteCarInContext:ctx
+                                     atX:width * carPositions[i]
+                                 groundY:horizon
+                                   scale:unit * (i == 1 ? 1.05 : 0.82)];
+    }
+
+    CGFloat peoplePositions[] = {0.19, 0.24, 0.29, 0.50, 0.55, 0.62, 0.86, 0.91};
+    for (int i = 0; i < 8; i++) {
+        [self drawSilhouettePersonInContext:ctx
+                                        atX:width * peoplePositions[i]
+                                    groundY:horizon
+                                      scale:unit * (1.45 + ((i % 3) * 0.12))
+                                     stride:(CGFloat)i * 0.9];
+    }
+}
+
+- (void)drawSilhouetteCarInContext:(CGContextRef)ctx atX:(CGFloat)x groundY:(CGFloat)groundY scale:(CGFloat)s
+{
+    CGFloat bodyWidth = s * 6.4;
+    CGFloat bodyHeight = s * 1.9;
+    CGFloat wheelRadius = s * 0.85;
+
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, x, groundY);
+
+    for (CGFloat sign = -1.0; sign <= 1.0; sign += 2.0) {
+        [[UIBezierPath bezierPathWithOvalInRect:CGRectMake(sign * bodyWidth * 0.30 - wheelRadius,
+                                                           -wheelRadius * 1.7,
+                                                           wheelRadius * 2.0,
+                                                           wheelRadius * 2.0)] fill];
+    }
+
+    [[UIBezierPath bezierPathWithRoundedRect:CGRectMake(-bodyWidth * 0.5,
+                                                        -bodyHeight - wheelRadius * 0.9,
+                                                        bodyWidth,
+                                                        bodyHeight)
+                                 cornerRadius:bodyHeight * 0.25] fill];
+
+    [[UIBezierPath bezierPathWithRoundedRect:CGRectMake(-bodyWidth * 0.22,
+                                                        -bodyHeight * 1.85 - wheelRadius * 0.9,
+                                                        bodyWidth * 0.52,
+                                                        bodyHeight * 0.95)
+                                 cornerRadius:bodyHeight * 0.22] fill];
+
+    CGContextRestoreGState(ctx);
+}
+
+- (void)drawSilhouettePersonInContext:(CGContextRef)ctx atX:(CGFloat)x groundY:(CGFloat)groundY scale:(CGFloat)s stride:(CGFloat)stride
+{
+    CGFloat tall = s * 2.6;
+    CGFloat swing = sin(stride) * s * 0.35;
+
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, x, groundY);
+
+    // Head
+    [[UIBezierPath bezierPathWithOvalInRect:CGRectMake(-s * 0.22, -tall, s * 0.44, s * 0.44)] fill];
+
+    UIBezierPath *figure = [UIBezierPath bezierPath];
+    figure.lineWidth = MAX(1.0, s * 0.30);
+    figure.lineCapStyle = kCGLineCapRound;
+
+    [figure moveToPoint:CGPointMake(0, -tall + s * 0.44)];
+    [figure addLineToPoint:CGPointMake(0, -tall * 0.42)];
+
+    [figure moveToPoint:CGPointMake(0, -tall * 0.78)];
+    [figure addLineToPoint:CGPointMake(-s * 0.50, -tall * 0.55 + swing)];
+    [figure moveToPoint:CGPointMake(0, -tall * 0.78)];
+    [figure addLineToPoint:CGPointMake(s * 0.50, -tall * 0.55 - swing)];
+
+    [figure moveToPoint:CGPointMake(0, -tall * 0.42)];
+    [figure addLineToPoint:CGPointMake(swing, 0)];
+    [figure moveToPoint:CGPointMake(0, -tall * 0.42)];
+    [figure addLineToPoint:CGPointMake(-swing, 0)];
+
+    [figure stroke];
+
+    CGContextRestoreGState(ctx);
 }
 
 #pragma mark - Wordmark

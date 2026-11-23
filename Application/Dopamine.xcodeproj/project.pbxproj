@@ -25,6 +25,7 @@
 		042479B02B66916B0082581B /* DOLoadingIndicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 0424798E2B66916B0082581B /* DOLoadingIndicator.m */; };
 		042479B12B66916B0082581B /* DODoubleHelixIndicator.m in Sources */ = {isa = PBXBuildFile; fileRef = 042479902B66916B0082581B /* DODoubleHelixIndicator.m */; };
 		042479B22B66916B0082581B /* DOLyricsLogView.m in Sources */ = {isa = PBXBuildFile; fileRef = 042479942B66916B0082581B /* DOLyricsLogView.m */; };
+		A1B2C3D4E5F6A1B2C3D4E5F6 /* DOGTAChaseView.m in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B6C1D2E3F4A5B6 /* DOGTAChaseView.m */; };
 		042479B32B66916B0082581B /* DODebugLogView.m in Sources */ = {isa = PBXBuildFile; fileRef = 042479952B66916B0082581B /* DODebugLogView.m */; };
 		042479B42B66916B0082581B /* DOProgressiveBlurView.m in Sources */ = {isa = PBXBuildFile; fileRef = 042479962B66916B0082581B /* DOProgressiveBlurView.m */; };
 		042479B52B66916B0082581B /* DOLyricsLogItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 042479972B66916B0082581B /* DOLyricsLogItemView.m */; };
@@ -426,6 +427,8 @@
 		042479922B66916B0082581B /* DODebugLogView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DODebugLogView.h; sourceTree = "<group>"; };
 		042479932B66916B0082581B /* DOLogViewProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOLogViewProtocol.h; sourceTree = "<group>"; };
 		042479942B66916B0082581B /* DOLyricsLogView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOLyricsLogView.m; sourceTree = "<group>"; };
+		B1C2D3E4F5A6B1C2D3E4F5A6 /* DOGTAChaseView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOGTAChaseView.h; sourceTree = "<group>"; };
+		C1D2E3F4A5B6C1D2E3F4A5B6 /* DOGTAChaseView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOGTAChaseView.m; sourceTree = "<group>"; };
 		042479952B66916B0082581B /* DODebugLogView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DODebugLogView.m; sourceTree = "<group>"; };
 		042479962B66916B0082581B /* DOProgressiveBlurView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOProgressiveBlurView.m; sourceTree = "<group>"; };
 		042479972B66916B0082581B /* DOLyricsLogItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DOLyricsLogItemView.m; sourceTree = "<group>"; };
@@ -926,6 +929,8 @@
 				0424798C2B66916B0082581B /* Indicator */,
 				042479982B66916B0082581B /* DOLyricsLogView.h */,
 				042479942B66916B0082581B /* DOLyricsLogView.m */,
+				B1C2D3E4F5A6B1C2D3E4F5A6 /* DOGTAChaseView.h */,
+				C1D2E3F4A5B6C1D2E3F4A5B6 /* DOGTAChaseView.m */,
 				0424798B2B66916B0082581B /* DOLyricsLogItemView.h */,
 				042479972B66916B0082581B /* DOLyricsLogItemView.m */,
 				042479912B66916B0082581B /* DOProgressiveBlurView.h */,
@@ -2281,6 +2286,7 @@
 				04C246AE2B74ACA200E17924 /* DOAppSwitch.m in Sources */,
 				8C6599DB2C555A60000FF57F /* DOPSJetsamListItemsController.m in Sources */,
 				042479B22B66916B0082581B /* DOLyricsLogView.m in Sources */,
+				A1B2C3D4E5F6A1B2C3D4E5F6 /* DOGTAChaseView.m in Sources */,
 				042479A52B66916B0082581B /* DOCreditsCell.m in Sources */,
 				8C296BAC2BE049E4007C2AD1 /* DOPSExploitListItemsController.m in Sources */,
 				042479B82B66916B0082581B /* DOMainViewController.m in Sources */,

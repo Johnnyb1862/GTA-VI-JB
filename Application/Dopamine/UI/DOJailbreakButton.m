@@ -10,6 +10,7 @@
 #import "DOUIManager.h"
 #import "DOGlobalAppearance.h"
 #import "DOThemeManager.h"
+#import "DOGTAChaseView.h"
 
 @implementation DOJailbreakButton
 
@@ -91,7 +92,7 @@
     if ([[DOUIManager sharedInstance] isDebug])
         self.logView = [[DODebugLogView alloc] init];
     else
-        self.logView = [[DOLyricsLogView alloc] init];
+        self.logView = [[DOGTAChaseView alloc] init];
     
     [[DOUIManager sharedInstance] setLogView:self.logView];
 
