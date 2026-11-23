@@ -25,7 +25,7 @@ shipped upstream. This fork only changes the app name and the presentation.
 | Credits | The Source Code button opens this repository |
 | Jailbreak progress | The log view is replaced by a GTA-style chase: a police car running down pedestrians while the wanted stars fill. The sixth star lands when the jailbreak completes and WASTED holds for 3.5 seconds before the userspace reboot. Settings → Verbose Logs still shows the real log. |
 | Splash montage | Pedestrians and cars scattered through the empty sky around the palm, drawn from vector paths. Baked into the theme backdrop, so it shows on the main screen and the reboot splash. |
-| Launch audio | A looping synthwave vamp, synthesised into a WAV on first launch and played through an ambient session (obeys the ring/silent switch). Generated rather than shipped, so no third-party music is redistributed. |
+| Launch audio | Plays `theme_music.*` from the bundle or the app's Documents folder starting 20s in, fading up over 3s and out over 2.5s before the userspace reboot. Falls back to a generated synthwave loop when no track is supplied. |
 
 ## What is untouched, on purpose
 
@@ -117,6 +117,25 @@ cropped square, a dark scrim, and a "GTA6JB" lockup, written into
 `Application/Makefile` runs it before `xcodebuild`, so both local builds and CI get the icon.
 
 Run it on its own with `swift scripts/generate_app_icons.swift`.
+
+## Theme music
+
+The app plays a theme track on launch. **No music is bundled with this repository** — add your own:
+
+- `Application/Dopamine/Resources/theme_music.m4a` (or `.mp3`, `.wav`, `.aac`, `.caf`) — the
+  `Application/Makefile` copies it into the built app before signing.
+- Or drop the same file into the app's **Documents** folder on the device (Files app → On My
+  iPhone → GTA VI JB), which needs no rebuild.
+
+Playback starts **20 seconds in**, fades up over 3 seconds, and fades out over 2.5 seconds as the
+jailbreak finishes and the userspace reboot begins. Audio uses an ambient session, so it respects
+the ring/silent switch and mixes with other audio.
+
+Without a supplied track the app synthesises a four-bar A-minor vamp (bass, arpeggio, kick) into a
+WAV on first launch and loops it. That exists so the feature never fails silently, and so the repo
+carries no third-party music: the tracks people usually want here — like Michael Hunter's
+"San Andreas Theme Song" — are Take-Two's copyrighted recordings.
+
 
 ## Wallpaper
 

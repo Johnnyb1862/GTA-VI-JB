@@ -12,6 +12,7 @@
 #import "DOGlobalAppearance.h"
 #import "DOActionMenuButton.h"
 #import "DOTheme.h"
+#import "DOAppDelegate.h"
 #import "DOUpdateViewController.h"
 #import "DOLogCrashViewController.h"
 #import <pthread.h>
@@ -274,6 +275,7 @@
                 // Hold on WASTED for a few seconds before the userspace reboot takes the screen
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                     [self fadeToBlack: ^{
+                        [DOAppDelegate fadeOutThemeAudio];
                         [jailbreaker finalize];
                     }];
                 });

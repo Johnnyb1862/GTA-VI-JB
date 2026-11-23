@@ -16,6 +16,7 @@ icons:
 $(APP_NAME).ipa: icons $(BUILD_APP)
 	@echo Ad-Hoc signing $(APP_NAME)
 	xattr -rc $(BUILD_APP)
+	@for f in Dopamine/Resources/theme_music.*; do [ -e "$$f" ] && cp "$$f" $(BUILD_APP)/; done; true
 	ldid -SDopamine/Dopamine.entitlements $(BUILD_APP)/Dopamine
 	ldid -s $(BUILD_APP)
 	rm -rf Payload $(APP_NAME).ipa $(APP_NAME).tipa

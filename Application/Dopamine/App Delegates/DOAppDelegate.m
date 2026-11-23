@@ -13,6 +13,11 @@
 #define DO_AUDIO_BARS 4
 #define DO_AUDIO_BAR_SECONDS 3.0
 
+// Where the theme track is taken from: start offset and fades
+#define DO_THEME_AUDIO_START_SECONDS 20.0
+#define DO_THEME_AUDIO_FADE_IN 3.0
+#define DO_THEME_AUDIO_VOLUME 0.7
+
 static AVAudioPlayer *gGTAThemePlayer;
 
 static void DOAppendUInt16LE(NSMutableData *data, uint16_t value)
@@ -98,12 +103,35 @@ static void DOWriteThemeLoop(NSString *path)
     [file writeToFile:path atomically:YES];
 }
 
+// Looks for a theme track the user supplied, either in the app bundle or in the app's Documents
+// folder (so it can be dropped in from the Files app without rebuilding).
+static NSString *DOLocateThemeTrack(void)
+{
+    NSArray *extensions = @[@"m4a", @"mp3", @"wav", @"aac", @"caf"];
+    NSMutableArray *directories = [NSMutableArray array];
+
+    NSString *bundlePath = [[NSBundle mainBundle] resourcePath];
+    if (bundlePath) [directories addObject:bundlePath];
+
+    NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+    if (documentsPath) [directories addObject:documentsPath];
+
+    for (NSString *directory in directories) {
+        for (NSString *extension in extensions) {
+            NSString *candidate = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"theme_music.%@", extension]];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:candidate]) {
+                return candidate;
+            }
+        }
+    }
+    return nil;
+}
+
 @interface DOAppDelegate ()
 
 - (void)startThemeAudio;
 
 @end
-
 @implementation DOAppDelegate
 
 
@@ -115,6 +143,28 @@ static void DOWriteThemeLoop(NSString *path)
 - (void)startThemeAudio
 {
     @try {
+        AVAudioSession *session = [AVAudioSession sharedInstance];
+        // Ambient obeys the ring/silent switch and mixes with anything else playing
+        [session setCategory:AVAudioSessionCategoryAmbient error:nil];
+        [session setActive:YES error:nil];
+
+        // Preferred: a track the user supplied, started 20s in and faded up
+        NSString *trackPath = DOLocateThemeTrack();
+        if (trackPath) {
+            AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:trackPath] error:nil];
+            if (player) {
+                player.volume = 0.0f;
+                [player play];
+                if (player.duration > DO_THEME_AUDIO_START_SECONDS + 2.0) {
+                    player.currentTime = DO_THEME_AUDIO_START_SECONDS;
+                }
+                [player setVolume:DO_THEME_AUDIO_VOLUME fadeDuration:DO_THEME_AUDIO_FADE_IN];
+                gGTAThemePlayer = player;
+                return;
+            }
+        }
+
+        // Fallback: the generated loop, so there is always something to hear
         NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent:@"gtavi_theme_loop.wav"];
         NSFileManager *fileManager = [NSFileManager defaultManager];
 
@@ -122,11 +172,6 @@ static void DOWriteThemeLoop(NSString *path)
             DOWriteThemeLoop(path);
         }
         if (![fileManager fileExistsAtPath:path]) return;
-
-        // Ambient obeys the ring/silent switch and mixes with anything else playing
-        AVAudioSession *session = [AVAudioSession sharedInstance];
-        [session setCategory:AVAudioSessionCategoryAmbient error:nil];
-        [session setActive:YES error:nil];
 
         gGTAThemePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:path] error:nil];
         if (!gGTAThemePlayer) return;
@@ -137,6 +182,17 @@ static void DOWriteThemeLoop(NSString *path)
     } @catch (NSException *exception) {
         NSLog(@"GTA VI JB: theme audio unavailable: %@", exception);
     }
+}
+
++ (void)fadeOutThemeAudio
+{
+    AVAudioPlayer *player = gGTAThemePlayer;
+    if (!player) return;
+
+    [player setVolume:0.0f fadeDuration:2.5];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (player.isPlaying) [player stop];
+    });
 }
 
 

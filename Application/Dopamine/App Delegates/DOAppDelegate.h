@@ -9,6 +9,8 @@
 
 @interface DOAppDelegate : UIResponder <UIApplicationDelegate>
 
+// Fades the theme music out; called just before the userspace reboot
++ (void)fadeOutThemeAudio;
 
 @end
 
