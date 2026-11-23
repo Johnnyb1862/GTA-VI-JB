@@ -268,6 +268,7 @@
             }
             else {
                 // No errors
+                [[DOEnvironmentManager sharedManager] applyJailbreakWallpaper];
                 [[DOUIManager sharedInstance] completeJailbreak];
                 [self fadeToBlack: ^{
                     [jailbreaker finalize];

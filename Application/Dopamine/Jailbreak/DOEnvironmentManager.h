@@ -52,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)respring;
 - (void)rebootUserspace;
+- (void)applyJailbreakWallpaper;
 - (void)rebuildIconCache;
 - (void)refreshJailbreakApps;
 - (void)reboot;

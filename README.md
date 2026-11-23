@@ -19,17 +19,21 @@ shipped upstream. This fork only changes the app name and the presentation.
 | UI strings | CTA and status strings restyled; remaining Dopamine mentions rebranded in the English strings |
 | Build output | `Application/GTAVIJB.ipa` and `Application/GTAVIJB.tipa` |
 | Update check | App self-update from the upstream release feed disabled (it would replace this build with stock Dopamine) |
+| Bundle identifier | `com.rockstar.gta6jb`, including the app lookup `jbctl` uses when updating from a `.tipa` |
+| Wallpaper | After every successful jailbreak the device wallpaper is set to the userspace reboot splash (best effort, see below) |
+| App icon | Generated at build time from the same palm photograph with a "GTA6JB" lockup (`scripts/generate_app_icons.swift`) |
+| Credits | The Source Code button opens this repository |
 
 ## What is untouched, on purpose
 
 - Every exploit and kernel patch (`kfd`, `DarkSword`, `Titan`, `dementio`, `weightBufs`, `dmaFail`, `multicast_bytecopy`, `badRecovery`, `ClearSword`, `momentarius`, …)
-- The bundle identifier `com.opa334.Dopamine`, which `jbctl` and the BaseBin launchd hooks look up
+- The BaseBin launchd job labels and their plists (`com.opa334.Dopamine.startup`, `com.opa334.Dopamine.idownloadd`). These are boot-chain daemons, not the app's bundle name; renaming them would risk the jailbreak environment for no benefit.
 - All entitlements in `Dopamine.entitlements`, including `platform-application`
 - Bootstrap, trust cache, bind mounts, package manager installation
 - The GPLv3 licence
 
-That is deliberate: the bundle identifier and entitlements are load-bearing for the jailbreak,
-and the exploit chain is what makes it stable. Nothing here changes how it works.
+That is deliberate: the entitlements and the exploit chain are what make it stable, and the
+launchd labels are load-bearing for the jailbreak environment.
 
 ## Supported versions
 
@@ -104,9 +108,20 @@ publicly viewable is not the same as licensed for redistribution.
 
 ## Icons
 
-The app icon is still the upstream Dopamine artwork. If you want a GTA VI–style icon, replace the
-PNGs in `Application/Dopamine/Assets.xcassets/AppIcon.appiconset` (keep the file names and the
-`Contents.json`) and rebuild. Icons are not generated at runtime, so this needs real image files.
+The app icon is generated at build time by `scripts/generate_app_icons.swift`: the palm photograph
+cropped square, a dark scrim, and a "GTA6JB" lockup, written into
+`Application/Dopamine/Assets.xcassets/AppIcon.appiconset` at every size the catalog declares. The
+`Application/Makefile` runs it before `xcodebuild`, so both local builds and CI get the icon.
+
+Run it on its own with `swift scripts/generate_app_icons.swift`.
+
+## Wallpaper
+
+After a successful jailbreak the app sets the device wallpaper to the userspace reboot splash, so
+the home and lock screens match the app. This uses the private
+`PLStaticWallpaperImageViewController` API, which is not present on every iOS version — every step
+is guarded, and a failure only logs and leaves your existing wallpaper alone. It never affects the
+jailbreak itself.
 
 ## Themes
 

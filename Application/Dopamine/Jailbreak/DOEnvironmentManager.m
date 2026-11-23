@@ -28,6 +28,7 @@
 #import "DOPreferenceManager.h"
 #import "NSData+Hex.h"
 #import <LocalAuthentication/LocalAuthentication.h>
+#import <objc/message.h>
 
 int reboot3(uint64_t flags, ...);
 CFPropertyListRef MGCopyAnswer(CFStringRef);
@@ -455,6 +456,62 @@ extern char **environ;
 - (void)rebootUserspace
 {
     [self spawnJbctlAsRootWithArgs:@[@"reboot_userspace"]];
+}
+
+// Sets the device wallpaper to the userspace reboot splash, so the home/lock screen matches the
+// jailbreak. Best effort: uses the private PLStaticWallpaperImageViewController, which is present
+// on some iOS versions but not all, so every step is guarded and failures never affect the jailbreak.
+- (void)applyJailbreakWallpaper
+{
+    UIImage *wallpaperImage = [[DOUIManager sharedInstance] renderBootLogo];
+    if (!wallpaperImage) return;
+
+    Class wallpaperClass = NSClassFromString(@"PLStaticWallpaperImageViewController");
+
+    if (!wallpaperClass) {
+        NSArray *frameworkPaths = @[
+            @"/System/Library/PrivateFrameworks/PhotoLibrary.framework",
+            @"/System/Library/PrivateFrameworks/PhotoLibraryServices.framework",
+        ];
+        for (NSString *frameworkPath in frameworkPaths) {
+            if (wallpaperClass) break;
+            NSBundle *frameworkBundle = [NSBundle bundleWithPath:frameworkPath];
+            [frameworkBundle load];
+            wallpaperClass = NSClassFromString(@"PLStaticWallpaperImageViewController");
+        }
+    }
+
+    if (!wallpaperClass) {
+        NSLog(@"GTA VI JB: wallpaper controller unavailable, skipping wallpaper update");
+        return;
+    }
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        @try {
+            id controller = [(id)wallpaperClass alloc];
+
+            SEL initSelector = NSSelectorFromString(@"initWithUIImage:");
+            if (![controller respondsToSelector:initSelector]) return;
+
+            controller = ((id (*)(id, SEL, id))objc_msgSend)(controller, initSelector, wallpaperImage);
+
+            SEL setWallpaperSelector = NSSelectorFromString(@"setWallpaperWithCompletion:");
+            if ([controller respondsToSelector:setWallpaperSelector]) {
+                void (^completion)(NSError *) = ^(NSError *error) {
+                    if (error) NSLog(@"GTA VI JB: wallpaper update failed: %@", error);
+                };
+                ((void (*)(id, SEL, id))objc_msgSend)(controller, setWallpaperSelector, completion);
+                return;
+            }
+
+            SEL saveWallpaperSelector = NSSelectorFromString(@"saveWallpaperData");
+            if ([controller respondsToSelector:saveWallpaperSelector]) {
+                ((void (*)(id, SEL))objc_msgSend)(controller, saveWallpaperSelector);
+            }
+        } @catch (NSException *exception) {
+            NSLog(@"GTA VI JB: wallpaper update threw: %@", exception);
+        }
+    });
 }
 
 - (void)rebuildIconCache

@@ -1,4 +1,4 @@
-.PHONY: all clean build_clean
+.PHONY: all icons clean build_clean
 
 # Product name shown to the user / used for the packaged app
 APP_NAME = GTAVIJB
@@ -8,7 +8,12 @@ BUILD_APP = build/Build/Products/Debug-iphoneos/Dopamine.app
 
 all: $(APP_NAME).ipa
 
-$(APP_NAME).ipa: $(BUILD_APP)
+# Draw the GTA VI JB app icon from the theme photograph
+icons:
+	@echo Generating $(APP_NAME) app icons
+	@swift ../scripts/generate_app_icons.swift
+
+$(APP_NAME).ipa: icons $(BUILD_APP)
 	@echo Ad-Hoc signing $(APP_NAME)
 	xattr -rc $(BUILD_APP)
 	ldid -SDopamine/Dopamine.entitlements $(BUILD_APP)/Dopamine
